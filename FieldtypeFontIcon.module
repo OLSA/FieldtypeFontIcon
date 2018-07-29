@@ -1,0 +1,43 @@
+<?php  namespace ProcessWire;
+
+/**
+ * Class FieldtypeFontIcon
+ *
+ * @author			: Oluic Sasa
+ * @website			: http://olsa.me
+ */
+class FieldtypeFontIcon extends Fieldtype {
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => 'FieldtypeFontIcon',
+			'summary' => __('Simplified version of input field font icons field type.'),
+			'version' => 1,
+			'author' => 'Oluic Sasa',
+			'icon' => 'flag-o',
+			'href' => 'http://olsa.me',
+			'installs' => array(
+				'InputfieldFontIcon',				
+			),
+		);
+	}
+
+	public function init() {
+		parent::init();
+	}
+	
+	public function getInputfield(Page $page, Field $field) {
+		$inputField = $this->modules->get('InputfieldFontIcon');
+		return $inputField;
+	}
+	
+	public function sanitizeValue(Page $page, Field $field, $value) {				
+		return $value;
+	}
+	
+	public function getDatabaseSchema(Field $field) {		
+		$schema = parent::getDatabaseSchema($field);
+		$schema['data'] = "VARCHAR(255) NOT NULL DEFAULT ''";
+		return $schema;
+	}
+}

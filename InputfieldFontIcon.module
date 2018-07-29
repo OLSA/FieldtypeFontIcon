@@ -1,0 +1,113 @@
+<?php namespace ProcessWire;
+
+class InputfieldFontIcon extends Inputfield {	
+	
+	protected $libraryUrl;	
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => 'InputfieldFontIcon',
+			'summary' => 'Simplified version of input field font icons field type.',
+			'version' => 1,
+			'author' => 'Oluic Sasa',
+			'href' => 'http://olsa.me',
+			'icon' => 'flag',
+			'requires' => array(
+				'FieldtypeFontIcon',
+            )
+		);
+	}
+	
+    // Construct and establish default settings
+	public function __construct() {
+		parent::__construct();		
+		$this->libraryUrl = $this->config->urls->FieldtypeFontIcon . 'Libraries/fontIconPicker-2.0.0/';			
+		$this->set('css_url', '');	
+        $this->set('prefix', '');
+		$this->set('regex_pattern', '/\.(.*?):before/');		
+        $this->set('exclude_list', '');        
+	}
+
+
+	public function init() {
+        parent::init();		
+		$this->config->styles->add($this->libraryUrl . "css/jquery.fonticonpicker.css");		
+		$this->config->styles->add($this->libraryUrl . "themes/grey-theme/jquery.fonticonpicker.grey.min.css");        		
+		$this->config->scripts->add($this->libraryUrl . "jquery.fonticonpicker.js");		
+	}
+		
+	
+	public function ___render() {        		
+		
+		// load field css file.
+        $this->config->styles->add($this->config->urls->templates . $this->css_url);				
+				
+		$name = $this->attr('name');		
+		$this->setAttribute('value', $this->attr('value'));
+        
+		$icons = array();
+        $file_path = $this->config->paths->templates . $this->css_url;
+		$file_content = '';
+		if(file_exists($file_path))
+		{
+			$file = fopen($file_path, "r");
+			$file_content = fread($file, filesize($file_path));
+			fclose($file);
+            // parse icons css file			
+            preg_match_all($this->regex_pattern, $file_content, $matches);
+			$icons = $matches[1];			
+		}
+		
+		// check and set prefix classes (if any)
+		$prefix = (trim($this->prefix) !== '') ? trim($this->prefix) . ' ' : '';
+		
+		$f = $this->modules->get('InputfieldSelect');			
+		foreach($icons as $opt) {		
+			$f->addOption($prefix . $opt, $opt);			
+		}		
+		$f->attr('name', $this->attr('name'));		
+        $f->attr('value', $this->attr('value'));		
+		$output = $f->render();		
+		$output.= "<script type='text/javascript'>
+		               $(document).ready(function() {  
+                           $('#Inputfield_{$this->attr("name")}').fontIconPicker();
+						});
+				   </script>";	    
+		return $output;
+	}
+	
+	
+
+	public function ___getConfigInputfields() {
+		$inputfields = parent::___getConfigInputfields();			
+
+		// CSS file path
+		$field = $this->modules->get('InputfieldText');
+		$field->attr('name', 'css_url');
+		$field->attr('value', $this->css_url);
+		$field->label = __('Icons CSS file');
+		$field->description = __('Path relative to templates folder.');
+		$field->columnWidth = 50;
+		$inputfields->add($field);
+		
+		// icons prefix classes
+		$field = $this->modules->get('InputfieldText');
+		$field->attr('name', 'prefix');
+		$field->attr('value', $this->prefix);
+		$field->label = __('Icon class prefix');
+		$field->description = __('Example: fa or ico, or multiple separated by single space.');		
+		$field->columnWidth = 50;
+		$inputfields->add($field);		
+		
+		// regular expression pattern
+		$field = $this->modules->get('InputfieldText');
+		$field->attr('name', 'regex_pattern');
+		$field->attr('value', $this->regex_pattern);
+		$field->label = __('Regular expression pattern parser');
+		$field->description = __('Example: /\.(.*?):before/');		
+		$field->columnWidth = 100;
+		$inputfields->add($field);	
+
+		return $inputfields;
+	}
+}
